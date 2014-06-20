@@ -1,0 +1,121 @@
+---
+title: "Cookbook: General Relationships into Astronomical Datasets:SNe"
+output: pdf_document
+---
+
+This is an R Markdown document to reproduce all  results from de Souza et al (2014).
+
+# Required libraries
+```{r,results='hide',message=FALSE, cache=FALSE}
+require(minerva) 
+require(MASS)
+require(psych) 
+require(RColorBrewer)
+require(grDevices)
+require(reshape2)
+require(ggplot2)
+require(grid)
+require(gdata)
+require(plyr) 
+require(ape)
+require(phytools)
+require(scales)
+require(gridExtra)
+require(ggthemes)
+require(grDevices)
+require(WGCGRAD)
+```
+
+# Reading the data 
+
+Set working directory to the data folder (replace by your own directory)
+```{r}
+data_path<-"/Users/rafael/Dropbox/artigos/Meusartigos/IAA-WGC/SNe_Unsupervised/"
+```
+
+Reading the data
+
+```{r, tidy=FALSE}
+SNe_data<-read.table(file=paste(data_path,"SDSS2014_SN_features.dat",sep=""),header=TRUE,
+ sep="")
+```
+
+Quick look into the data
+```{r,tidy=FALSE}
+head(SNe_data,n=3L)
+```
+
+Too many variables!!! Let's clean a litle bit, select features of interest and rename them. The first step if to estimate the correlation matrix in the presence of missing values. Let's analyse only numerical values for now. Also let's start simple and look correlation among Type Ia SNe only. 
+
+
+
+
+
+
+```{r,tidy=FALSE}
+Features<-c("RA","DEC","Nsearchepoch","Classification","SDSS_i","SDSS_z","TWOMASS_H",
+"TWOMASS_J","TWOMASS_K","centralMvir","velX","velY","velZ","np","mvir","rvir","vvir",
+"vmax","coldGas","stellarMass","bulgeMass","hotGas","ejectedMass","blackHoleMass",
+"metalsColdGas","metalsStellarMass","metalsBulgeMass","metalsHotGas","metalsEjectedMass",
+"sfr","sfrBulge","xrayLum","diskRadius","coolingRadius","massWeightedAge")
+```
+
+Select variables of interest from our original data
+```{r}
+Blaizot_short<-subset(Blaizot_data,select=Features)
+```
+
+Cleaning memory from original data
+```{r}
+rm(Blaizot_data)
+```
+
+Calculate the  vector norm  for  velocity components
+
+```{r}
+vel<-data.frame(sqrt(Blaizot_short$velX^2+Blaizot_short$velY^2+Blaizot_short$velZ^2))
+colnames(vel)<-vel
+```
+
+Update our data
+```{r}
+Blaizot_short2<-cbind(subset(Blaizot_short,select=c(-velX,-velY,-velZ)),vel)
+```
+
+Rename variables
+
+```{r,tidy=FALSE}
+colnames(Blaizot_short2)<-c("Redshift","u","g","r","i","z","H","J",
+"K","M[h]","np","M[vir]","R[vir]","V[vir]","V[max]","M[gamma*c]",
+"M[sigma]","M[beta]","M[gamma*h]","M[ejec]","M[Bh]","zeta[gamma*c]",
+"zeta[sigma]","zeta[beta]","zeta[gamma*c]","zeta[ejec]",
+"SFR","SFR[beta]","L[x]","R[disk]","R[cool]","tau[gal]","V[pec]")
+```
+
+Estimate correlation Matrix based on Maximum Information Coefficient
+```{r}
+g1<-Corr_MIC(Blaizot_short2,method="pearson",scale=TRUE)
+```
+
+Plot the correlation Matrix
+
+```{r}
+plotcorrDist(g1)
+```
+
+
+
+Plot the correlation Matrix
+
+```{r}
+plotdendrogram(g1)
+```
+
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
